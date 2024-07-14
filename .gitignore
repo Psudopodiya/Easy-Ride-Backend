@@ -1,0 +1,16 @@
+# Ignore Python bytecodes, virtual environment files, and logs
+*.pyc
+__pycache__/
+.env
+
+# Ignore Django specific files
+.*.sqlite3
+.*.pyc
+*.pyo
+*.pyd
+
+./__pycache__/
+myvenv
+db.sqlite3
+/static/
+/media/
