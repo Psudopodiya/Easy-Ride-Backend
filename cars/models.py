@@ -18,8 +18,16 @@ class Car(models.Model):
     additional_features = models.JSONField()
     year_of_manufacturing = models.IntegerField()
     rating = models.DecimalField(max_digits=3, decimal_places=1)
-    image = models.ImageField(upload_to='car_images/')
     is_booked = models.BooleanField(default=False)
+    description = models.TextField(blank=True, max_length=500)
 
     def __str__(self):
         return f"{self.brand} {self.name}"
+
+class CarImage(models.Model):
+    car = models.ForeignKey(Car, related_name='images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='car_images/')
+    is_cover = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Image for {self.car.name} (Cover: {self.is_cover})"
