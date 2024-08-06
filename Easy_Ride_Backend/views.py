@@ -1,37 +1,33 @@
-# from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-# from rest_framework_simplejwt.serializers import TokenObtainSerializer, TokenRefreshSerializer
-# from rest_framework.response import Response
-# from rest_framework import status
-# from Easy_Ride_Backend.utils import get_logger
-# from rest_framework_simplejwt.exceptions import InvalidToken, TokenError, AuthenticationFailed
-#
-# logger = get_logger(__name__)
-#
-#
-# class CustomTokenObtainPairView(TokenObtainPairView):
-#     def post(self, request, *args, **kwargs):
-#         serializer = TokenObtainSerializer(data=request.data)
-#         try:
-#             if serializer.is_valid(raise_exception=True):
-#                 return Response(serializer.validated_data, status=status.HTTP_200_OK)
-#         except Exception as e:
-#             logger.warning(f"Authentication error: {str(e)}")
-#             return Response(
-#                 {"detail": str(e), "code": "authentication_failed"},
-#                 status=status.HTTP_401_UNAUTHORIZED
-#             )
-#
-#
-# class CustomTokenRefreshView(TokenRefreshView):
-#
-#     def post(self, request, *args, **kwargs):
-#         serializer = TokenRefreshSerializer(data=request.data)
-#         try:
-#             if serializer.is_valid():
-#                 return Response(serializer.validated_data, status=status.HTTP_200_OK)
-#         except Exception as e:
-#             logger.warning(f"Authentication error: {str(e)}")
-#             return Response(
-#                 {"detail": str(e), "code": "authentication_failed"},
-#                 status=status.HTTP_401_UNAUTHORIZED
-#             )
+# your_app/views.py
+
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework import status
+from Easy_Ride_Backend.utils import success_response, error_response
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = TokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            return success_response(data=data, message="Login successful")
+        except Exception as e:
+            return error_response(error_message="Login failed", error=str(e), status_code=status.HTTP_401_UNAUTHORIZED)
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = TokenRefreshSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            return success_response(data=data, message="Token refreshed successfully")
+        except Exception as e:
+            return error_response(error_message="Token refresh failed", error=str(e),
+                                  status_code=status.HTTP_401_UNAUTHORIZED)
