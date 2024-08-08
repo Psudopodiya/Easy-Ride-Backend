@@ -7,3 +7,9 @@ class BookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = '__all__'
         read_only_fields = ('user',)
+
+
+class BookingDateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = ['start_date', 'end_date']

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Car, Brand, CarImage
+from bookings.serializers import BookingDateSerializer
 
 
 class CarImageSerializer(serializers.ModelSerializer):
@@ -17,12 +18,13 @@ class BrandSerializer(serializers.ModelSerializer):
 class DetailCarSerializer(serializers.ModelSerializer):
     brand = BrandSerializer()
     images = CarImageSerializer(many=True, read_only=True)
+    bookings = BookingDateSerializer(many=True, read_only=True, source='booking_set')
 
     class Meta:
         model = Car
         fields = ['id', 'name', 'brand', 'rental_rate', 'car_class', 'basic_features', 'additional_features',
                   'description',
-                  'year_of_manufacturing', 'rating', 'is_booked', 'images']
+                  'year_of_manufacturing', 'rating', 'is_booked', 'images', 'bookings']
 
 
 class CarSerializer(serializers.ModelSerializer):

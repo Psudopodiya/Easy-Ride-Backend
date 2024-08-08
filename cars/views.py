@@ -1,13 +1,9 @@
-from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from Easy_Ride_Backend.utils import get_logger
+from Easy_Ride_Backend.utils import get_logger, success_response, error_response
 from .models import Car, Brand
 from .serializers import CarSerializer, DetailCarSerializer, BrandSerializer
-from rest_framework import status
 import random
-from rest_framework.response import Response
-
 
 logger = get_logger(__name__)
 
@@ -19,21 +15,21 @@ def car_list(request):
         all_cars = Car.objects.all()
         car_list = random.sample(list(all_cars), min(len(all_cars), 10))
         serializer = CarSerializer(car_list, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
-
-    except Car.DoesNotExist:
-        logger.error("No cars found in the database.")
-        return Response(
-            {"error": "No cars found in the database."},
-            status=status.HTTP_404_NOT_FOUND
-        )
+        return success_response(serializer.data, message="Data fetched successfully")
     except Exception as e:
-        logger.error(f"Error retrieving random cars: {str(e)}")
-        return Response(
-            {"error": "An error occurred while retrieving cars."},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
+        return error_response(error_message="Fetching data failed", error=str(e))
+    # except Car.DoesNotExist:
+    #     logger.error("No cars found in the database.")
+    #     return Response(
+    #         {"error": "No cars found in the database."},
+    #         status=status.HTTP_404_NOT_FOUND
+    #     )
+    # except Exception as e:
+    #     logger.error(f"Error retrieving random cars: {str(e)}")
+    #     return Response(
+    #         {"error": "An error occurred while retrieving cars."},
+    #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
+    #     )
 
 
 @api_view(['POST'])
@@ -47,10 +43,11 @@ def all_car_list(request):
         else:
             cars = Car.objects.all()
         serializer = CarSerializer(cars, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
+        return success_response(serializer.data, message="Data fetched successfully")
+        # return Response(serializer.data, status.HTTP_200_OK)
     except Exception as e:
         logger.error(f"Error retrieving filtered cars: {e}")
-        return Response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(error_message="Fetching data failed", error=str(e))
 
 
 @api_view(['GET'])
@@ -59,12 +56,12 @@ def car_detail(request, pk):
     try:
         car = Car.objects.get(pk=pk)
         serializer = DetailCarSerializer(car)
-        return Response(serializer.data, status.HTTP_200_OK)
-    except car.DoesNotExist:
-        return Response("Car not Found", status.HTTP_404_NOT_FOUND)
+        return success_response(serializer.data, message="Data fetched successfully")
+    # except car.DoesNotExist:
+    #     return Response("Car not Found", status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logger.error(f"Error retrieving car details for PK {pk}: {e}")
-        return Response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(error_message="Fetching data failed", error=str(e))
 
 
 @api_view(['GET'])
@@ -73,11 +70,8 @@ def car_brands(request):
     try:
         brands = Brand.objects.all()
         serializer = BrandSerializer(brands, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
-
-    except brands.DoesNotExist:
-        return Response("Brand not Found", status.HTTP_404_NOT_FOUND)
+        return success_response(serializer.data, message="Data fetched successfully")
 
     except Exception as e:
         logger.error(f"Error retrieving car brands: {e}")
-        return Response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(error_message="Fetching data failed", error=str(e))

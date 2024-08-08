@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any
+from Easy_Ride_Backend.utils import get_logger, success_response, error_response
 from django.core.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -7,6 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Booking
 from cars.models import Car
 from .serializers import BookingSerializer
+from rest_framework import status
+
+logger = get_logger(__name__)
 
 
 def parse_date(date_string: str) -> datetime.date:
@@ -22,18 +26,12 @@ def create_booking(request):
     """
         Create a new booking for an authenticated user.
     """
-
-    car_name = request.data.get('car')
+    print(request.data)
+    car_id = request.data.get('car_id')
     start_date = request.data.get("start_date")
     end_date = request.data.get("end_date")
-
-    if not all([car_name, start_date, end_date]):
-        return Response({"error": "Please provide car, start_date, and end_date"}, status=400)
-
     try:
-        car = Car.objects.get(name=car_name)
-        if car.is_booked:
-            return Response({"error": "The Car is already booked select some other car "})
+        car = Car.objects.get(id=car_id)
         start_date = parse_date(start_date)
         end_date = parse_date(end_date)
 
@@ -55,24 +53,18 @@ def create_booking(request):
             booking = serializer.save(user=request.user)
             car.is_booked = True
             car.save()
-            return Response(serializer.data, status=210)
-    except Car.DoesNotExist:
-        return Response(
-            {"error": f"Car '{car_name}' not found"},
-            status=404
-        )
-    except ValidationError as e:
-        return Response({"error": str(e)}, status=400)
+            return success_response(serializer.data, message="Booking created successfully", status_code=status.HTTP_201_CREATED)
     except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred"},
-            status=500
-        )
+        logger.error(f"Error retrieving car brands: {e}")
+        return error_response(error_message="Booking failed", error=str(e))
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_bookings(request):
-    bookings = Booking.objects.filter(user=request.user)
-    serializer = BookingSerializer(bookings, many=True)
-    return Response(serializer.data)
+    try:
+        bookings = Booking.objects.filter(user=request.user)
+        serializer = BookingSerializer(bookings, many=True)
+        return success_response(serializer.data)
+    except Exception as e:
+        return error_response(error_message="Fetching data failed", error=str(e))
