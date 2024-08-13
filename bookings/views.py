@@ -26,7 +26,6 @@ def create_booking(request):
     """
         Create a new booking for an authenticated user.
     """
-    print(request.data)
     car_id = request.data.get('car_id')
     start_date = request.data.get("start_date")
     end_date = request.data.get("end_date")
@@ -41,6 +40,11 @@ def create_booking(request):
         booking_days = (end_date - start_date).days + 1
         total_cost = booking_days * car.rental_rate
 
+        user = request.user
+        if user.balance < total_cost:
+            return error_response(error_message="Insufficient balance", error="Insufficient balance",
+                                  status_code=status.HTTP_400_BAD_REQUEST)
+
         booking_data: Dict[str, Any] = {
             'car': car.id,
             'start_date': start_date,
@@ -53,7 +57,12 @@ def create_booking(request):
             booking = serializer.save(user=request.user)
             car.is_booked = True
             car.save()
-            return success_response(serializer.data, message="Booking created successfully", status_code=status.HTTP_201_CREATED)
+            user.balance -= total_cost
+            user.save()
+            return success_response(
+                serializer.data, message="Booking created successfully", status_code=status.HTTP_201_CREATED
+            )
+
     except Exception as e:
         logger.error(f"Error retrieving car brands: {e}")
         return error_response(error_message="Booking failed", error=str(e))

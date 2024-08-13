@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -5,6 +7,7 @@ from .serializers import CustomUserSerializer
 from Easy_Ride_Backend.utils import get_logger, success_response, error_response
 
 logger = get_logger(__name__)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -34,3 +37,16 @@ def get_user(request):
         return error_response(
             error_message="Error in retrieving user data", error=str(e), status_code=status.HTTP_401_UNAUTHORIZED
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_balance(request):
+    try:
+        amount = request.data.get('amount')
+        user = request.user
+        user.balance += Decimal(amount)
+        user.save()
+        return success_response({'new_balance': user.balance}, message="Balance added successfully")
+    except Exception as e:
+        return error_response(error_message="Failed to add balance", error=str(e))
